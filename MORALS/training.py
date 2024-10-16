@@ -6,6 +6,8 @@ from torch import nn
 from tqdm import tqdm
 from MORALS.models import *
 
+import warnings
+
 class TrainingConfig:
     def __init__(self, weights_str):
         self.weights_str = weights_str
@@ -120,7 +122,7 @@ class Training:
         return self.labels_criterion(encodings[pairs['successes']], encodings[pairs['failures']]) * weight
 
 
-    def train(self, epochs=1000, patience=50, weight=[1,1,1,0]):
+    def train(self, epochs=1000, patience=50, weight=[1,1,1,1]):
         '''
         Function that trains all the models with all the losses and weight.
         It will stop if the test loss does not improve for "patience" epochs.
@@ -130,7 +132,9 @@ class Training:
         list_parameters += (weight_bool[1] or weight_bool[2]) * list(self.dynamics.parameters())
         optimizer = torch.optim.Adam(list_parameters, lr=self.lr)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, threshold=0.001, patience=patience, verbose=True)
+        
         for epoch in tqdm(range(epochs)):
+
             loss_ae1_train = 0
             loss_ae2_train = 0
             loss_dyn_train = 0
@@ -221,8 +225,9 @@ class Training:
             if epoch >= patience:
                 if np.mean(self.test_losses['loss_total'][-patience:]) > np.mean(self.test_losses['loss_total'][-patience-1:-1]):
                     if self.verbose:
-                        print("Early stopping")
+                        warnings.warn("Early stopping")
                     break
             
             if self.verbose:
-                print('Epoch [{}/{}], Train Loss: {:.4f}, Test Loss: {:.4f}'.format(epoch + 1, epochs, epoch_train_loss, epoch_test_loss))
+                warnings.warn('Epoch [{}/{}], Train Loss: {:.4f}, Test Loss: {:.4f}'.format(epoch + 1, epochs, epoch_train_loss, epoch_test_loss))
+        warnings.warn("Completed Training")
