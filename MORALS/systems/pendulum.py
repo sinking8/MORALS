@@ -15,6 +15,24 @@ class Pendulum(BaseSystem):
         xdot = self.l * np.cos(s[:,0]) * s[:,1]
         ydot = -self.l * np.sin(s[:,0]) * s[:,1]
         return np.array([x,y,xdot,ydot]).T
+
+    import numpy as np
+
+    def reverse_transform(self,x, y, xdot, ydot,):
+        # Recover theta (angle)
+        theta = np.arctan2(x, y)
+
+        # Recover theta_dot (angular velocity)
+        theta_dot_x = xdot / (self.l * np.cos(theta))
+        theta_dot_y = -ydot / (self.l * np.sin(theta))
+
+        # Average theta_dot for numerical stability
+        theta_dot = (theta_dot_x + theta_dot_y) / 2.0
+
+        # Combine theta and theta_dot to form the state vector s
+        s = np.vstack((theta, theta_dot)).T
+        return s
+
     
     # def transform(self,s):
     #     x = self.l * np.sin(s[0])

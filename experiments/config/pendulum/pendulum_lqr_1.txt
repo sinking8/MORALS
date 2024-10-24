@@ -17,5 +17,5 @@
     'labels_fname': '/nas/home/ashwinb/robotic_manipulation/MORALS/experiments/data/pendulum_lqr1k_success.txt',
     'model_dir': '/nas/home/ashwinb/robotic_manipulation/MORALS/experiments/models/pendulum_lqr1k_1/',
     'log_dir': '/nas/home/ashwinb/robotic_manipulation/MORALS/experiments/logs/pendulum_lqr1k_1/',
-    'output_dir': '/nas/home/ashwinb/robotic_manipulation/MORALS/experiments/output/pendulum_lqr1k_1/2',
+    'output_dir': '/nas/home/ashwinb/robotic_manipulation/MORALS/experiments/output/pendulum_lqr1k_1/',
 }

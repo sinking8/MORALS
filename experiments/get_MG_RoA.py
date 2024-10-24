@@ -19,11 +19,7 @@ import os
 
 import numpy as np
 
-import warnings
-
 def write_experiments(morse_graph, experiment_name, output_dir, name="MG_attractors.txt"):
-
-    warnings.warn(output_dir)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -46,41 +42,31 @@ def write_experiments(morse_graph, experiment_name, output_dir, name="MG_attract
         file.write(f":{list_attractors},{counting_attractors}\n")
 
 
-def compute_roa(map_graph, morse_graph, lower_bounds, upper_bounds, config, base_name):
+def compute_roa(map_graph, morse_graph, lower_bounds, upper_bounds, output_dir):
+    startTime = datetime.now()
+    roa = RoA.RoA(map_graph, morse_graph)
 
-    # startTime = datetime.now()
+    print(f"Time to build the regions of attraction = {datetime.now() - startTime}")
 
-    # roa = RoA.RoA(map_graph, morse_graph)
-
-    # print(f"Time to build the regions of attraction = {datetime.now() - startTime}")
-
-    # roa.dir_path = base_name
-
-    # roa.save_file("MG_ROA")
+    # roa.dir_path = os.path.join(os.getcwd(), output_dir)
+    roa.dir_path = output_dir
+    roa.save_file("MG")
 
     if config['low_dims'] == 2:
-
-        # fig, ax = roa.PlotRoA(name_plot=base_name)
-
-        # plt.savefig(base_name, bbox_inches='tight')
-
-        dir_path = os.path.abspath(os.getcwd()) + "/"
-
-        # fig, ax = PlotRoA(lower_bounds, upper_bounds,
-        #             from_file=base_name, dir_path=dir_path)
-
         fig, ax = PlotRoA(lower_bounds, upper_bounds,
-                    from_file="output/trifinger_learned_b/2/MGMG_ROA", dir_path=dir_path)                    
+                    from_file="MG", dir_path=output_dir)
 
-        # out_pic = roa.dir_path + base_name + "_RoA_"
+        # out_pic = os.path.join(os.getcwd(), output_dir, "MG_RoA_")
+        out_pic = os.path.join(output_dir,"MG_RoA_")
 
-        plt.savefig("output/trifinger/2/RoA", bbox_inches='tight')
+        plt.savefig(out_pic, bbox_inches='tight')
 
 def main(args, config, experiment_name):
 
     dyn_utils = DynamicsUtils(config)
 
     MG_util = CMGDB_util.CMGDB_util()
+
     system = get_system(config['system'], config['high_dims'])
 
     sb = args.sub
@@ -88,12 +74,8 @@ def main(args, config, experiment_name):
     if config['system'] == "discrete_map":
         number_of_steps = 1
 
-    
 
     subdiv_init = subdiv_min = subdiv_max = sb  # non adaptive proceedure
-
-
-
 
     # Get the limits
     if type(system.get_true_bounds()) == type(NotImplementedError):  # use data for not implemented bounds
@@ -116,7 +98,7 @@ def main(args, config, experiment_name):
 
     grid = Grid.Grid(lower_bounds, upper_bounds, sb)
 
-
+    print(args.validation_type)
     # flag_true_bounds = False
     # if type(system.get_true_bounds()) != type(NotImplementedError):  # update bounds using the true_bounds
     #     lower_bounds_original_space = system.get_true_bounds()[:,0].tolist()
@@ -138,12 +120,14 @@ def main(args, config, experiment_name):
 
     else: # sample from trajectories (ideal for large trajectory set)
         dataset = DynamicsDataset(config)
+        print("Hello")
         latent_space_sample = dyn_utils.encode(dataset.Xt.numpy(), normalize=False)
 
-    latent_space_sample = dyn_utils.encode(original_space_sample)
+    # latent_space_sample = dyn_utils.encode(original_space_sample)
     # update the bounds using the limits given by the sample
-    lower_bounds = np.min(latent_space_sample, axis=0).tolist()
-    upper_bounds = np.max(latent_space_sample, axis=0).tolist()
+    
+    # lower_bounds = np.min(latent_space_sample, axis=0).tolist()
+    # upper_bounds = np.max(latent_space_sample, axis=0).tolist()
 
     print("data on the latent space", latent_space_sample.shape)
     print(latent_space_sample[1])
@@ -164,7 +148,7 @@ def main(args, config, experiment_name):
     # base name for the output files.
     base_name = f"{config['output_dir']}{args.name_out}"
     
-        
+    
     print(base_name)
 
     base_name = f"{config['output_dir']}/MG"
@@ -175,11 +159,11 @@ def main(args, config, experiment_name):
         subdiv_min, subdiv_max, lower_bounds, upper_bounds, phase_periodic, F, base_name, subdiv_init)
 
 
-    # write_experiments(morse_graph, experiment_name, config['output_dir'])
+    write_experiments(morse_graph, experiment_name, config['output_dir'])
 
     if args.RoA:
      
-        compute_roa(map_graph, morse_graph, lower_bounds, upper_bounds, config, base_name)
+        compute_roa(map_graph, morse_graph, lower_bounds, upper_bounds, config['output_dir'])
 
 if __name__ == "__main__":
 
@@ -189,7 +173,7 @@ if __name__ == "__main__":
     parser.add_argument('--name_out',help='Name of the out file',type=str,default='out_exp')
     parser.add_argument('--RoA',help='Compute RoA',action='store_true')
     parser.add_argument('--sub',help='Select subdivision',type=int,default=14)
-    parser.add_argument('--validation_type',help='Select the type of Validation for the lantent discretization',type=str,default='random')
+    parser.add_argument('--validation_type',help='Select the type of Validation for the lantent discretization',type=str,default='dataset')
     parser.add_argument('--Lips',help='increase Lipschitz constant by x%',type=int,default=0)
 
     args = parser.parse_args()
